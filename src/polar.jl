@@ -306,8 +306,24 @@ function extrapolate(p::Polar; cd_max::Union{Nothing, Float64}=nothing, AR::Unio
     return Polar(p.Re, rad2deg.(alpha), cl, cd, cm, p.M, p.n_crit, p.xtrip, p.name_airfoil)
 end
 
+function generate_name(p::Polar; fname_extra="")
+    if (p.alpha[1] == -180 && p.alpha[end] == 180) | (p.alpha[1] == -π && p.alpha[end] == π)
+        str_extra = "_360"
+    else
+        str_extra = ""
+    end
+    if p.name_airfoil == ""
+        name_af = "NONAME"
+    else 
+        name_af = p.name_airfoil
+    end
+    if fname_extra != ""
+        fname_extra = "_" * fname_extra
+    end
+   return f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}"
+end
 
-function save(p::Polar, dir_out::String; fname_extra="", type::Symbol = :csv)
+function save(p::Polar, fname::String, type::Symbol = :csv)
     n_alpha = length(p.alpha)
 
     if type == :csv
@@ -322,32 +338,23 @@ function save(p::Polar, dir_out::String; fname_extra="", type::Symbol = :csv)
             xtrip1 = [p.xtrip[1] for _ in n_alpha],
             xtrip2 = [p.xtrip[2] for _ in n_alpha],
         )
-        if (p.alpha[1] == -180 && p.alpha[end] == 180) | (p.alpha[1] == -π && p.alpha[end] == π)
-            str_extra = "_360"
-        else
-            str_extra = ""
-        end
-        if p.name_airfoil == ""
-            name_af = "NONAME"
-        else 
-            name_af = p.name_airfoil
-        end
-        if fname_extra != ""
-            fname_extra = "_" * fname_extra
-        end
-        fname = joinpath(dir_out, f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}.csv")
-        CSV.write(fname, df)
+        
+        CSV.write(fname * ".csv", df)
     end
 end
 
 function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
     pplt = pyimport("proplot")
 
+    names = generate_name.(polars)
+
     fig, ax = pplt.subplots(figsize=(7,3), sharex=true, sharey=false, ncols=3, nrows=1)
+    i = 1
     for p in polars
-        ax[1].plot(p.alpha, p.cl, label=f"Re: {p.Re/1000:7.1f} k")
-        ax[2].plot(p.alpha, p.cd, label=f"Re: {p.Re/1000:7.1f} k")
-        ax[3].plot(p.alpha, p.cm, label=f"Re: {p.Re/1000:7.1f} k")
+        ax[1].plot(p.alpha, p.cl, ".-", label=names[i], lw=0.8, ms=1.6)
+        ax[2].plot(p.alpha, p.cd, ".-", label=names[i], lw=0.8, ms=1.6)
+        ax[3].plot(p.alpha, p.cm, ".-", label=names[i], lw=0.8, ms=1.6)
+        i += 1
     end 
     ax[1].legend(ncols=1)
 
@@ -355,7 +362,6 @@ function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
         ylabel = L"$c_l$",
     )
     ax[2].set(
-        title = f"Polars of {polars[1].name_airfoil}",
         ylabel = L"$c_d$",
         xlabel = "α [deg]",
     )
