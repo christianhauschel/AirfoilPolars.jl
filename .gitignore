@@ -29,5 +29,5 @@ Manifest.toml
 # CUSTOM
 out/*
 
-
+data/airfoils/*
 data/polars/*

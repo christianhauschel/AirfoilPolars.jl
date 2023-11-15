@@ -21,7 +21,7 @@ mutable struct Polar
 end
 
 function Polar(Re, alpha, cl, cd, cm)
-    return Polar(Re, alpha, cl, cd, cm, NaN64, NaN64, (NaN64, NaN64), "")
+    return Polar(Re, alpha, cl, cd, cm, NaN64, NaN64, (NaN64, NaN64), "NONAME")
 end
 
 function smooth1D(x, y; order=3, smoothing=0.01)
@@ -320,7 +320,8 @@ function generate_name(p::Polar; fname_extra="")
     if fname_extra != ""
         fname_extra = "_" * fname_extra
     end
-   return f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}"
+
+    return f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}"
 end
 
 function save(p::Polar, fname::String, type::Symbol = :csv)
@@ -375,3 +376,5 @@ function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
 
     return fig
 end
+
+

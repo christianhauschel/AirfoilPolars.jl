@@ -3,10 +3,12 @@ import AirfoilFast as AF
 using PrettyPrint
 using PyFormattedStrings
 
+# ==============================================================================
+# Settings
+# ==============================================================================
+
 dir_out = "data/polars"
 af = AF.Airfoil("data/airfoils/NACA0012.csv")
-
-init(af)
 
 cd_max = 1.5
 n_re = 2
@@ -15,7 +17,11 @@ alpha = Vector(0.0:0.5:4)
 n_re = length(re)
 mach = 0.1
 
+# ==============================================================================
+
 polars = Vector{Polar}(undef, n_re)
+
+init(af)
 
 section("Solve")
 for i in 1:n_re
@@ -25,11 +31,6 @@ end
 
 polars_smooth = smooth.(polars)
 
-# save.(polars, [dir_out for _ in 1:n_re])
- 
-# polars_all = [polars; polars_smooth]
-
-# plot(polars_all)
 
 names_polar = generate_name.(polars_ext)
 polars_ext = extrapolate.(polars_smooth; cd_max = cd_max )
