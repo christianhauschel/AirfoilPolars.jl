@@ -14,7 +14,7 @@ function solve(
     alpha::Vector,
     re::Number;
     n_iter::Int = 100,
-    n_crit::Int = 9,
+    n_crit::Float64 = 9.0,
     xtrip::Tuple = (1.0, 1.0),
     mach::Number = 0.0,
 )
