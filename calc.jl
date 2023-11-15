@@ -7,7 +7,9 @@ using PyFormattedStrings
 # Settings
 # ==============================================================================
 
-dir_out = "data/polars"
+dir_data = "/mnt/a/Code/10_drones/Propeller/data"
+
+dir_out = join(dir_data, "polars")
 af = AF.Airfoil("data/airfoils/NACA0012.csv")
 
 cd_max = 1.5
