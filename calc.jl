@@ -32,9 +32,11 @@ end
 polars_smooth = smooth.(polars)
 
 
-names_polar = generate_name.(polars_ext)
+
 polars_ext = extrapolate.(polars_smooth; cd_max = cd_max )
+
+names_polar = generate_name.(polars_ext)
 
 plot([polars; polars_ext]; fname="plot.png")
 
-save.(polars_ext, [joinpath(dir_out, name) for name in names_polar])
+save.(polars_ext, [joinpath(dir_out, name*".csv") for name in names_polar])

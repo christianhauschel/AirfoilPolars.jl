@@ -175,3 +175,27 @@ function load(fname)
         error("Unknown file extension: $ext")
     end
 end
+
+function save(p::Polar, fname::String)
+    n_alpha = length(p.alpha)
+
+    ext = get_filename_ext(fname)[2]
+
+    if ext == "csv"
+        df = DataFrame(
+            alpha = p.alpha,
+            cl = p.cl,
+            cd = p.cd,
+            cm = p.cm,
+            re = [p.Re for _ in n_alpha],
+            mach = [p.M for _ in n_alpha],
+            n_crit = [p.n_crit for _ in n_alpha],
+            xtrip1 = [p.xtrip[1] for _ in n_alpha],
+            xtrip2 = [p.xtrip[2] for _ in n_alpha],
+        )
+        
+        CSV.write(fname, df)
+    else
+        error("Unknown file extension: $ext")
+    end
+end

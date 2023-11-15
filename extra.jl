@@ -20,6 +20,6 @@ p_ext = extrapolate(p_smooth; cd_max=cd_max)
 fig = plot([p_ext, p])
 
 name = generate_name(p_ext)
-save(p_ext, joinpath(dir_polars, name))
+save(p_ext, joinpath(dir_polars, name*".csv"))
 
 fig

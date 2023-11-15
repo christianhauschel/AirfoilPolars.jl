@@ -324,25 +324,7 @@ function generate_name(p::Polar; fname_extra="")
     return f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}"
 end
 
-function save(p::Polar, fname::String, type::Symbol = :csv)
-    n_alpha = length(p.alpha)
 
-    if type == :csv
-        df = DataFrame(
-            alpha = p.alpha,
-            cl = p.cl,
-            cd = p.cd,
-            cm = p.cm,
-            re = [p.Re for _ in n_alpha],
-            mach = [p.M for _ in n_alpha],
-            n_crit = [p.n_crit for _ in n_alpha],
-            xtrip1 = [p.xtrip[1] for _ in n_alpha],
-            xtrip2 = [p.xtrip[2] for _ in n_alpha],
-        )
-        
-        CSV.write(fname * ".csv", df)
-    end
-end
 
 function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
     pplt = pyimport("proplot")
