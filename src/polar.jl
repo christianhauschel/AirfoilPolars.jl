@@ -348,7 +348,7 @@ function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
 
     names = generate_name.(polars)
 
-    fig, ax = pplt.subplots(figsize=(7,3), sharex=true, sharey=false, ncols=3, nrows=1)
+    fig, ax = pplt.subplots(figsize=(9,3), sharex=true, sharey=false, ncols=3, nrows=1)
     i = 1
     for p in polars
         ax[1].plot(p.alpha, p.cl, ".-", label=names[i], lw=0.8, ms=1.6)
