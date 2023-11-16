@@ -42,14 +42,18 @@ plot([polars; polars_smooth])
 
 polars_ext = extrapolate.(polars_smooth; cd_max = cd_max )
 
-@time polars_3d = correction3D.(polars_smooth, 0.75, 0.07582298136645961, 63.0);
+@time polars_3d = correction3D.(polars_smooth, 0.22, 0.53, 4.24);
 
-fig = plot([polars_smooth; polars_3d])
+fig = plot([polars_smooth[1]; polars_3d[1]])
 
 names_polar = generate_name.(polars)
 names_polar_ext = generate_name.(polars_ext)
 
 plot([polars; polars_ext]; fname="plot.png")
+
+polars_ext_3d = correction3D.(polars_ext, 0.22, 0.53, 4.24);
+
+plot([polars_ext[1]; polars_ext_3d[1]])
 
 # save.(polars, [joinpath(dir_out, name*".csv") for name in names_polar])
 # save.(polars_ext, [joinpath(dir_out, name*".csv") for name in names_polar_ext])

@@ -114,7 +114,7 @@ function _correction3D(
     cl_3d = cl_2d + fcl .* (cl_linear - cl_2d) .* adj
 
     # Du-Selig correction for drag
-    cd0 = linear(cd_2d, alpha, 0.0)
+    cd0 = linear(alpha, cd_2d, 0.0)
     dcd = cd_2d .- cd0
     cd_3d = cd_2d + fcd .* dcd
 
