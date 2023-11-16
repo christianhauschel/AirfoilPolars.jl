@@ -1,6 +1,7 @@
 import Xfoil
 using AirfoilFast
 using .AirfoilPolars: Polar
+using FLOWMath: linear
 
 name_af = ""
 
@@ -17,6 +18,8 @@ function solve(
     n_crit::Number = 9.0,
     xtrip::Tuple = (1.0, 1.0),
     mach::Number = 0.0,
+    make_nonconverged_nan::Bool = false,    
+    interpolate_nonconverged::Bool = false,
 )
     n_alpha = length(alpha)
     cl = zeros(n_alpha)
@@ -36,5 +39,32 @@ function solve(
         )
     end
     global name_af
+
+    if make_nonconverged_nan
+        cl[converged .== 0] .= NaN
+        cd[converged .== 0] .= NaN
+        cm[converged .== 0] .= NaN
+    end
+
+    if interpolate_nonconverged
+        cl[converged .== 0] .= NaN
+        cd[converged .== 0] .= NaN
+        cm[converged .== 0] .= NaN
+        cl = interpolate_nan(alpha, cl)
+        cd = interpolate_nan(alpha, cd)
+        cm = interpolate_nan(alpha, cm)
+    end
+
     return Polar(re, alpha, cl, cd, cm, mach, n_crit, xtrip, name_af)
+end
+
+function interpolate_nan(x::Vector, y::Vector)
+    # select only values that are not NaN 
+    y_valid = y[.!isnan.(y)]
+    x_valid = x[.!isnan.(y)]
+
+    # interpolate  
+    y_new = akima(x_valid, y_valid, x)
+
+    return y_new
 end
