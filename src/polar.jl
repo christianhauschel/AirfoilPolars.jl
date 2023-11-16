@@ -72,6 +72,26 @@ function blend(p1::Polar, p2::Polar, weight2::Float64)
     return Polar(Re, alpha, cl, cd, cm, mean([p1.M, p2.M]), mean([p1.n_crit, p2.n_crit]), mean.([p1.xtrip, p2.xtrip]))
 end
 
+"""
+    _correction3D(
+        alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64}, r_over_R::Float64, chord_over_r::Float64,
+        tsr::Float64; alpha_max_corr::Float64=30.0,
+        alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
+    )
+
+Applies 3-D corrections for rotating sections from the 2-D data.
+
+# Parameters
+- `alpha::Vector{Float64}`: angle of attack [deg]
+- `cl_2d::Vector{Float64}`: 2-D lift coefficient
+- `cd_2d::Vector{Float64}`: 2-D drag coefficient
+- `r_over_R::Float64`: local radial location / tip radius
+- `chord_over_r::Float64`: local chord / local radial location
+- `tsr::Float64`: tip speed ratio
+- `alpha_max_corr::Float64`: maximum angle of attack to apply full correction
+- `alpha_linear_min::Float64`: angle of attack where linear portion of lift curve slope begins
+- `alpha_linear_max::Float64`: angle of attack where linear portion of lift curve slope ends
+"""
 function _correction3D(
     alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64}, r_over_R::Float64, chord_over_r::Float64,
     tsr::Float64; alpha_max_corr::Float64=30.0,

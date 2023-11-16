@@ -52,6 +52,8 @@ names_polar_ext = generate_name.(polars_ext)
 plot([polars; polars_ext]; fname="plot.png")
 
 polars_ext_3d = correction3D.(polars_ext, 0.22, 0.53, 4.24);
+polars_ext_3d = correction3D.(polars_ext, 0.12037037037037036, 1.1626923076923077, 8.4823);
+
 
 plot([polars_ext[1]; polars_ext_3d[1]])
 

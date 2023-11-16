@@ -20,7 +20,9 @@ ax[1].plot(p.alpha, p.cd, label='Original')
 ax[2].plot(p_ext.alpha, p_ext.cm, label='Extrapolated')
 ax[2].plot(p.alpha, p.cm, label='Original')
 
-p_ext_3D = p_ext.correction3D( 0.22, 0.53, 4.24)
+# p_ext_3D = p_ext.correction3D(0.22, 0.53, 4.24)
+
+p_ext_3D = p_ext.correction3D( 0.12037037037037036, 1.1626923076923077, 8.4823)
 
 fig, ax = pplt.subplots(figsize=(9,3), nrows=1, ncols=3, sharex=True, sharey=False)
 ax[0].plot(p_ext_3D.alpha, p_ext_3D.cl, label='3D Corrected')
