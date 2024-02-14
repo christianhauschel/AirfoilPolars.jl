@@ -7,7 +7,7 @@ using PyFormattedStrings
 # Settings
 # ==============================================================================
 
-dir_data = "/mnt/a/Code/10_drones/Propeller/data"
+dir_data = "/home/hacs/projects/neaptide/Propeller/data"
 
 dir_out = joinpath(dir_data, "polars")
 af = AF.Airfoil(joinpath(dir_data, "airfoils/NACA4412.dat"))
@@ -21,7 +21,7 @@ n_re = length(re)
 alpha = Vector(-10:0.25:15)
 n_re = length(re)
 mach = 0.0
-n_crit = 5
+n_crit = 9
 n_iter = 100
 
 # ==============================================================================
@@ -49,13 +49,13 @@ fig = plot([polars_smooth[1]; polars_3d[1]])
 names_polar = generate_name.(polars)
 names_polar_ext = generate_name.(polars_ext)
 
-plot([polars; polars_ext]; fname="plot.png")
+# plot([polars; polars_ext]; fname="plot.png")
 
 polars_ext_3d = correction3D.(polars_ext, 0.22, 0.53, 4.24);
 polars_ext_3d = correction3D.(polars_ext, 0.12037037037037036, 1.1626923076923077, 8.4823);
 
 
-plot([polars_ext[1]; polars_ext_3d[1]])
+# plot([polars_ext[1]; polars_ext_3d[1]])
 
 # save.(polars, [joinpath(dir_out, name*".csv") for name in names_polar])
 # save.(polars_ext, [joinpath(dir_out, name*".csv") for name in names_polar_ext])
