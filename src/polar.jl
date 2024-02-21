@@ -8,7 +8,24 @@ using PyFormattedStrings
 using DataFrames
 # using PyPlot, PyCall
 using LsqFit
+using Plots, LaTeXStrings
 
+"""
+    Polar
+
+A struct to store airfoil polars.
+
+# Fields
+- `Re::Float64`: Reynolds number
+- `alpha::Vector{Float64}`: angle of attack [deg]
+- `cl::Vector{Float64}`: lift coefficient
+- `cd::Vector{Float64}`: drag coefficient
+- `cm::Vector{Float64}`: moment coefficient
+- `M::Float64`: Mach number
+- `n_crit::Float64`: critical amplification factor
+- `xtrip::Tuple{Float64,Float64}`: transition location
+- `name_airfoil::String`: name of the airfoil
+"""
 mutable struct Polar
     Re::Float64
     alpha::Vector{Float64}
@@ -34,13 +51,19 @@ function Base.copy(p::Polar)
     return Polar(p.Re, copy(p.alpha), copy(p.cl), copy(p.cd), copy(p.cm), copy(p.M), copy(p.n_crit), copy(p.xtrip), p.name_airfoil)
 end
 
+"""
+    smooth(p::Polar; order_cl=3, order_cd=3, order_cm=3, smoothing_cl=0.01, smoothing_cd=0.0001, smoothing_cm=0.005)
+
+Smooths a polar using splines.
+
+"""
 function smooth(
     p::Polar;
     order_cl=3,
     order_cd=3,
     order_cm=3,
-    smoothing_cl=0.01,
-    smoothing_cd=0.0001,
+    smoothing_cl=0.1,
+    smoothing_cd=0.01,
     smoothing_cm=0.005
 )
     cl = smooth1D(p.alpha, p.cl; order=order_cl, smoothing=smoothing_cl)
@@ -74,28 +97,29 @@ end
 
 """
     _correction3D(
-        alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64}, r_over_R::Float64, chord_over_r::Float64,
-        tsr::Float64; alpha_max_corr::Float64=30.0,
-        alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
+        alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64}, 
+        r::Float64, c::Float64, u_inf::Float64, Ω::Float64; 
+        alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
     )
 
-Applies 3-D corrections for rotating sections from the 2-D data.
+Applies 3-D corrections for rotating sections from the 2-D data using the Du and Selig model.
 
 # Parameters
 - `alpha::Vector{Float64}`: angle of attack [deg]
 - `cl_2d::Vector{Float64}`: 2-D lift coefficient
 - `cd_2d::Vector{Float64}`: 2-D drag coefficient
-- `r_over_R::Float64`: local radial location / tip radius
-- `chord_over_r::Float64`: local chord / local radial location
-- `tsr::Float64`: tip speed ratio
+- `r::Float64`: local radial location
+- `c::Float64`: local chord 
+- `u_inf::Float64`: local sectional airfoil freestream velocity ≈ √(Vwind^2 + (Ωr)^2)
+- `Ω::Float64`: rotation speed [rad/s]
 - `alpha_max_corr::Float64`: maximum angle of attack to apply full correction
 - `alpha_linear_min::Float64`: angle of attack where linear portion of lift curve slope begins
 - `alpha_linear_max::Float64`: angle of attack where linear portion of lift curve slope ends
 """
 function _correction3D(
-    alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64}, r_over_R::Float64, chord_over_r::Float64,
-    tsr::Float64; alpha_max_corr::Float64=30.0,
-    alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
+    alpha::Vector{Float64}, cl_2d::Vector{Float64}, cd_2d::Vector{Float64},
+    r::Float64, c::Float64, u_inf::Float64, Ω::Float64;
+    alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-0.0, alpha_linear_max::Float64=5.0
 )
     # Convert units for convenience
     alpha = deg2rad.(alpha)
@@ -107,9 +131,12 @@ function _correction3D(
     a = 1
     b = 1
     d = 1
-    lam = tsr / sqrt(1 + tsr^2)  # modified tip speed ratio
-    expon = d / lam / r_over_R
+
+    λ = Ω * r / u_inf
+    expon = d / λ #d / Λ / r_over_R
     expon_d = expon / 2
+
+    n_alpha = length(alpha)
 
     # Find linear region
     idx = (alpha .>= alpha_linear_min) .& (alpha .<= alpha_linear_max)
@@ -121,59 +148,94 @@ function _correction3D(
     m = fit.param[1]
     alpha0 = -fit.param[2] / m
 
+    chord_over_r = c / r
+
     # Correction factor
     fcl = 1.0 / m * (1.6 * chord_over_r / 0.1267 * (a - chord_over_r .^ expon) ./ (b + chord_over_r .^ expon) - 1)
     fcd = 1.0 / m * (1.6 * chord_over_r / 0.1267 * (a - chord_over_r .^ expon_d) ./ (b + chord_over_r .^ expon_d) - 1)
 
     # Adjustment
-    adj = ((pi / 2 .- alpha) ./ (pi / 2 - alpha_max_corr)) .^ 2
-    adj[alpha.<=alpha_max_corr] .= 1.0
+    amax = atan(1/0.12) - deg2rad(5)
+    adj = zeros(n_alpha)
+    for i = 1:n_alpha
+        if abs(alpha[i]) >= amax 
+            adj[i] = 0.0
+        elseif abs(alpha[i]) > alpha_max_corr
+            adj[i] = ((amax-abs(alpha[i]))/(amax-alpha_max_corr))^2
+        else
+            adj[i] = 1.0
+        end
+    end
 
     # Du-Selig correction for lift
     cl_linear = m * (alpha .- alpha0)
-    cl_3d = cl_2d + fcl .* (cl_linear - cl_2d) .* adj
+    Δcl = fcl .* (cl_linear - cl_2d) .* adj
+    cl_3d = cl_2d .+ Δcl
 
     # Du-Selig correction for drag
     cd0 = linear(alpha, cd_2d, 0.0)
-    dcd = cd_2d .- cd0
-    cd_3d = cd_2d + fcd .* dcd
+    Δcd = fcd .* (cd0 .- cd_2d)
+    cd_3d = cd_2d .- Δcd
 
     return cl_3d, cd_3d
 end
 
 
 """
-    correction3D(polar::Polar, r_over_R::Float64, chord_over_r::Float64, tsr::Float64; 
+    correction3D(
+        polar::Polar, 
+        r::Float64, c::Float64, u_inf::Float64, Ω::Float64; 
         alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0)
 
-Applies 3-D corrections for rotating sections from the 2-D data.
+Applies 3-D corrections for rotating sections from the 2-D data using the Du and Selig model.
 
 
 # Parameters 
 - `polar::Polar`: 2-D polar
-- `r_over_R::Float64`: local radial location / tip radius
-- `chord_over_r::Float64`: local chord / local radial location
-- `tsr::Float64`: tip speed ratio
+- `r::Float64`: local radius
+- `c::Float64`: local chord 
+- `u_inf::Float64`: local airfoil freestream velocity ≈ √(Vwind^2 + (Ωr)^2)
+- `Ω::Float64`: rotation speed [rad/s]
 - `alpha_max_corr::Float64`: maximum angle of attack to apply full correction
 - `alpha_linear_min::Float64`: angle of attack where linear portion of lift curve slope begins
 - `alpha_linear_max::Float64`: angle of attack where linear portion of lift curve slope ends
 
 # Returns
 - `polar::Polar`: A new Polar object corrected for 3-D effects
+
+# References
+1. Z. Du and M. Selig, ‘A 3-D stall-delay model for horizontal axis wind turbine 
+performance prediction’, in 1998 ASME Wind Energy Symposium, Reno,NV,U.S.A.: American Institute of Aeronautics and Astronautics, Jan. 1998. doi: 10.2514/6.1998-21.
+
 """
 function correction3D(
-    polar::Polar, r_over_R::Float64, chord_over_r::Float64,
-    tsr::Float64; alpha_max_corr::Float64=30.0,
-    alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
+    polar::Polar, r::Float64, c::Float64, u_inf::Float64, Ω::Float64;
+    alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
 )::Polar
 
     cl_3d, cd_3d = _correction3D(
-        polar.alpha, polar.cl, polar.cd, r_over_R, chord_over_r,
-        tsr; alpha_max_corr=alpha_max_corr,
-        alpha_linear_min=alpha_linear_min, alpha_linear_max=alpha_linear_max
+        polar.alpha, polar.cl, polar.cd,
+        r, c, u_inf, Ω;
+        alpha_max_corr=alpha_max_corr, alpha_linear_min=alpha_linear_min, alpha_linear_max=alpha_linear_max
     )
 
     return Polar(polar.Re, polar.alpha, cl_3d, cd_3d, polar.cm, polar.M, polar.n_crit, polar.xtrip, polar.name_airfoil * "_3D")
+end
+
+function _correction_Mach(cl, cd, Ma_new)
+    cl = cl ./ sqrt(1 - Ma_new^2)
+    cd = cd ./ sqrt(1 - Ma_new^2)
+    return cl, cd
+end
+
+"""
+    correction_Mach(polar::Polar, Ma_new)
+
+Corrects a polar for a new Mach number using Prandtl-Glauert compressibility correction.
+"""
+function correction_Mach(polar::Polar, Ma_new)
+    cl, cd = _correction_Mach(polar.cl, polar.cd, Ma_new)
+    return Polar(polar.Re, polar.alpha, cl, cd, polar.cm, Ma_new, polar.n_crit, polar.xtrip, polar.name_airfoil)
 end
 
 function _Viterna(alpha::Vector, cl_adj, cd_max, A, B)
@@ -398,6 +460,7 @@ end
 
 
 
+
 # function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
 #     pplt = pyimport("proplot")
 
@@ -432,3 +495,28 @@ end
 # end
 
 
+function plot(polars::Vector{Polar}; fname=nothing, dpi=300, legend=true)
+    plot_layout = Plots.plot(layout=(3, 1), size=(600, 800), dpi=dpi)
+
+    names_polar = generate_name.(polars)
+    names_polar = reshape(names_polar, 1, length(names_polar))
+
+    # re = [f"{p.Re:0.2e}" for p in polars]
+    # re = reshape(re, 1, length(re))
+    cls = [p.cl for p in polars]
+    cds = [p.cd for p in polars]
+    cms = [p.cm for p in polars]
+    alphas = [p.alpha for p in polars]
+
+    plot!(plot_layout[1], alphas, cls, label=names_polar, ylabel=L"$c_l$", legend=legend)
+    plot!(plot_layout[2], alphas, cds, ylabel=L"$c_d$", legend=false)
+    plot!(plot_layout[3], alphas, cms, ylabel=L"$c_m$", legend=false, xlabel=L"$\alpha$ [deg]")
+
+    # plot!(plot_layout[1], legend=:bottomright, legendtitle="Reynolds")
+
+    display(plot_layout)
+
+    if fname !== nothing
+        savefig(plot_layout, fname)
+    end
+end
