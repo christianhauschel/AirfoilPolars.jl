@@ -1,7 +1,7 @@
 name = "AirfoilPolars"
 uuid = "dcdf7784-03de-4de4-bbfd-ea01717d9073"
 authors = ["Christian <hacs@zhaw.ch>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 AirfoilFast = "0d474814-34f0-4bc9-a1af-468ba8a1a60f"
