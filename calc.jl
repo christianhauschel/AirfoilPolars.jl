@@ -57,7 +57,7 @@ plot([polars_smooth[1], polars_3d[1]])
 
 polars_Ma = correction_Mach.(polars_smooth, 0.4)
 
-plot([polars_smooth[1], polars_Ma[1]])
+plot([polars_smooth[1], polars_Ma[1]]; fname="docs/img/mach.svg")
 
 
 plot([polars_smooth[1]; polars_3d[1]])

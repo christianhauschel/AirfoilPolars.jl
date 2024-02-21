@@ -5,7 +5,15 @@
 - Mach (Glauert) and rotation correction (Du and Selig)
 - Inspired by [1]
 
-<img src="docs/img/plot.svg" width=500px></img>
+## Corrections
+
+### Rotation
+
+<img src="docs/img/rotation.svg" width=500px></img>
+
+### Mach 
+
+<img src="docs/img/mach.svg" width=500px></img>
 
 
 ## References
