@@ -12,16 +12,15 @@
 
 <img src="docs/src/assets/rotation.svg" width=500px></img>
 
-### Mach 
+### Mach
 
 <img src="docs/src/assets/mach.svg" width=500px></img>
 
+## Acknowledgments
 
-## Acknowledgment
-
-Authors of AirfoilPreppy [1]
-
+Authors of AirfoilPreppy [1] and CCBlade.jl [2]
 
 ## References
 
-1. https://github.com/WISDEM/AirfoilPreppy
+1. <https://github.com/WISDEM/AirfoilPreppy>
+2. <https://github.com/byuflowlab/CCBlade.jl>
