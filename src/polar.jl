@@ -222,10 +222,9 @@ function correction3D(
     return Polar(polar.Re, polar.alpha, cl_3d, cd_3d, polar.cm, polar.M, polar.n_crit, polar.xtrip, polar.name_airfoil * "_3D")
 end
 
-function _correction_Mach(cl, cd, Ma_new)
+function _correction_Mach(cl, Ma_new)
     cl = cl ./ sqrt(1 - Ma_new^2)
-    cd = cd ./ sqrt(1 - Ma_new^2)
-    return cl, cd
+    return cl
 end
 
 """
@@ -234,8 +233,8 @@ end
 Corrects a polar for a new Mach number using Prandtl-Glauert compressibility correction.
 """
 function correction_Mach(polar::Polar, Ma_new)
-    cl, cd = _correction_Mach(polar.cl, polar.cd, Ma_new)
-    return Polar(polar.Re, polar.alpha, cl, cd, polar.cm, Ma_new, polar.n_crit, polar.xtrip, polar.name_airfoil)
+    cl = _correction_Mach(polar.cl, Ma_new)
+    return Polar(polar.Re, polar.alpha, cl, polar.cd, polar.cm, Ma_new, polar.n_crit, polar.xtrip, polar.name_airfoil)
 end
 
 function _Viterna(alpha::Vector, cl_adj, cd_max, A, B)
