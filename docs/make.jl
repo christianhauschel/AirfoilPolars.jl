@@ -1,11 +1,13 @@
-using Revise, Documenter, AirfoilPolars
+using Documenter, AirfoilPolars
+
+# push!(LOAD_PATH,"../src/")
 
 makedocs(
     sitename="AirfoilPolars.jl",
-    # repo = "https://github.zhaw.ch/hacs/AirfoilPolars",
-    # sitename="AirfoilPolars.jl",
-    modules=[AirfoilPolars],
-    # format = Documenter.HTML(),
+    repo = "https://github.com/christianhauschel/AirfoilPolars.jl.git",
+    # remotes=nothing,
+    # modules=[AirfoilPolars],
+    format = Documenter.HTML(prettyurls=false),
     pages = [
         "Home" => "index.md",
         "Polar" => "polar.md",
@@ -14,6 +16,6 @@ makedocs(
     ]
 )
 
-deploydocs(;
-    repo="https://github.zhaw.ch/hacs/AirfoilPolars.jl",
-)
+# deploydocs(;
+#     repo="https://github.zhaw.ch/hacs/AirfoilPolars.jl",
+# )

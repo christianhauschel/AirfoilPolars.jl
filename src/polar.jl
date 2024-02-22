@@ -184,13 +184,13 @@ function _correction3D(
     fcd = 1.0 / m * (1.6 * chord_over_r / 0.1267 * (a - chord_over_r .^ expon_d) ./ (b + chord_over_r .^ expon_d) - 1)
 
     # Adjustment
-    amax = atan(1/0.12) - deg2rad(5)
+    amax = atan(1 / 0.12) - deg2rad(5)
     adj = zeros(n_alpha)
     for i = 1:n_alpha
-        if abs(alpha[i]) >= amax 
+        if abs(alpha[i]) >= amax
             adj[i] = 0.0
         elseif abs(alpha[i]) > alpha_max_corr
-            adj[i] = ((amax-abs(alpha[i]))/(amax-alpha_max_corr))^2
+            adj[i] = ((amax - abs(alpha[i])) / (amax - alpha_max_corr))^2
         else
             adj[i] = 1.0
         end
@@ -258,7 +258,9 @@ end
 """
     correction_Mach(polar::Polar, Ma_new)
 
-Corrects a polar for a new Mach number using Prandtl-Glauert compressibility correction.
+Corrects a polar for a new Mach number using Prandtl-Glauert compressibility correction:
+
+``c_l = \\frac{c_{l, M=0}}{\\sqrt{1 - M^2}}``
 """
 function correction_Mach(polar::Polar, Ma_new)
     cl = _correction_Mach(polar.cl, Ma_new)
@@ -345,7 +347,13 @@ end
 
 
 """
-    extrapolate(p::Polar; cd_max::Union{Nothing,Float64}=nothing, AR::Union{Nothing,Float64}=nothing, cd_min=0.001, n_alpha::Int=15)
+    extrapolate(
+        p::Polar; 
+        cd_max::Union{Nothing,Float64}=nothing, 
+        AR::Union{Nothing,Float64}=nothing, 
+        cd_min=0.001, 
+        n_alpha::Int=15
+    )
 
 Extrapolate a polar to +/- 180 degrees. This function is based on the Viterna method.
 
@@ -356,7 +364,13 @@ Extrapolate a polar to +/- 180 degrees. This function is based on the Viterna me
 - `cd_min::Float64`: minimum drag coefficient
 - `n_alpha::Int`: number of points to use for extrapolation
 """
-function extrapolate(p::Polar; cd_max::Union{Nothing,Float64}=nothing, AR::Union{Nothing,Float64}=nothing, cd_min=0.001, n_alpha::Int=15)
+function extrapolate(
+    p::Polar;
+    cd_max::Union{Nothing,Float64}=nothing,
+    AR::Union{Nothing,Float64}=nothing,
+    cd_min=0.001,
+    n_alpha::Int=15
+)
     if cd_min < 0
         error("cdmin cannot be < 0")
     end

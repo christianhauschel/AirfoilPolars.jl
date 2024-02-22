@@ -1,4 +1,4 @@
-# AirfoilPolars
+# AirfoilPolars.jl
 
 - Polar calculation
 - Polar extrapolation
