@@ -1,5 +1,4 @@
 [deps]
-AirfoilFast = "0d474814-34f0-4bc9-a1af-468ba8a1a60f"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
