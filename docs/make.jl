@@ -1,8 +1,5 @@
 using Documenter, AirfoilPolars
 
-# push!(LOAD_PATH,"../src/")
-
-
 makedocs(
     sitename="AirfoilPolars.jl",
     repo = "https://github.com/christianhauschel/AirfoilPolars.jl.git",
