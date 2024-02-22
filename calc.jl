@@ -1,6 +1,5 @@
 using AirfoilPolars
 import AirfoilFast as AF
-using PrettyPrint
 using PyFormattedStrings
 
 # ==============================================================================
@@ -31,9 +30,9 @@ polars = Vector{Polar}(undef, n_re)
 
 init(af)
 
-section("Solve")
+
 for i in 1:n_re
-    subsubsection(f"Re: {re[i]/1000:7.1f} k")
+    println(f"Re: {re[i]/1000:7.1f} k")
     polars[i] = solve(alpha, re[i]; mach=mach, n_crit = n_crit, make_nonconverged_nan=false, interpolate_nonconverged=false, n_iter=n_iter)
 end
 
