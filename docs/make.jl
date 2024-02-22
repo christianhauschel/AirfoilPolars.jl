@@ -7,7 +7,7 @@ makedocs(
     repo = "https://github.com/christianhauschel/AirfoilPolars.jl.git",
     # remotes=nothing,
     # modules=[AirfoilPolars],
-    format = Documenter.HTML(prettyurls=false),
+    # format = Documenter.HTML(prettyurls=false),
     pages = [
         "Home" => "index.md",
         "Polar" => "polar.md",
@@ -16,6 +16,6 @@ makedocs(
     ]
 )
 
-# deploydocs(;
-#     repo="https://github.zhaw.ch/hacs/AirfoilPolars.jl",
-# )
+deploydocs(;
+    repo="github.com/christianhauschel/AirfoilPolars.jl.git",
+)
