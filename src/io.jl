@@ -16,6 +16,11 @@ function get_filename_ext(fname::String)::Tuple{String, String}
     return fname_noext, ext
 end
 
+"""
+    _load_csv(fname::String)::Polar
+
+Load a polar from a .csv file.
+"""
 function _load_csv(fname)
     df = CSV.read(fname, DataFrame)
     n_data = length(df[:,1])
@@ -116,6 +121,11 @@ function _load_csv(fname)
     return Polar(re, alpha, cl, cd, cm, mach, n_crit, xtrip, name_airfoil)
 end
 
+"""
+    _load_plr(fname::String)::Polar
+
+Load a polar from a .plr file (QBlade polar file format).
+"""
 function _load_plr(fname)
 
     alpha = Vector{Float64}()
@@ -164,7 +174,12 @@ function _load_plr(fname)
     return Polar(re, alpha, cl, cd, cm, mach, n_crit, xtrip, name_airfoil)
 end 
 
-function load(fname)
+"""
+    load(fname::String)::Polar
+
+Load a polar from a file (.csv or .plr).
+"""
+function load(fname::String)::Polar
     ext = get_filename_ext(fname)[2]
 
     if ext == "csv"
@@ -176,6 +191,11 @@ function load(fname)
     end
 end
 
+"""
+    save(p::Polar, fname::String)
+
+Save a polar to a file (.csv or .plr).
+"""
 function save(p::Polar, fname::String)
     n_alpha = length(p.alpha)
 

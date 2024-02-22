@@ -6,7 +6,6 @@ import Dierckx
 using CSV
 using PyFormattedStrings
 using DataFrames
-# using PyPlot, PyCall
 using LsqFit
 using Plots, LaTeXStrings
 
@@ -38,11 +37,28 @@ mutable struct Polar
     name_airfoil::String
 end
 
+"""
+    Polar(Re, alpha, cl, cd, cm)
+
+Create a new Polar object with no Xfoil properties.
+
+# Arguments
+- `Re::Float64`: Reynolds number
+- `alpha::Vector{Float64}`: angle of attack [deg]
+- `cl::Vector{Float64}`: lift coefficient
+- `cd::Vector{Float64}`: drag coefficient
+- `cm::Vector{Float64}`: moment coefficient
+"""
 function Polar(Re, alpha, cl, cd, cm)
     return Polar(Re, alpha, cl, cd, cm, NaN64, NaN64, (NaN64, NaN64), "NONAME")
 end
 
-function smooth1D(x, y; order=3, smoothing=0.01)
+"""
+    smooth1D(x, y; order=3, smoothing=0.01)
+
+Smooths a 1D curve using splines.
+"""
+function _smooth1D(x, y; order=3, smoothing=0.01)
     crv = Dierckx.Spline1D(x, y; k=order, s=smoothing)
     return crv(x)
 end
@@ -52,10 +68,13 @@ function Base.copy(p::Polar)
 end
 
 """
-    smooth(p::Polar; order_cl=3, order_cd=3, order_cm=3, smoothing_cl=0.01, smoothing_cd=0.0001, smoothing_cm=0.005)
+    smooth(
+        p::Polar; 
+        order_cl=3, order_cd=3, order_cm=3, 
+        smoothing_cl=0.01, smoothing_cd=0.0001, smoothing_cm=0.005
+    )
 
 Smooths a polar using splines.
-
 """
 function smooth(
     p::Polar;
@@ -66,13 +85,23 @@ function smooth(
     smoothing_cd=0.01,
     smoothing_cm=0.005
 )
-    cl = smooth1D(p.alpha, p.cl; order=order_cl, smoothing=smoothing_cl)
-    cd = smooth1D(p.alpha, p.cd; order=order_cd, smoothing=smoothing_cd)
-    cm = smooth1D(p.alpha, p.cm; order=order_cm, smoothing=smoothing_cm)
+    cl = _smooth1D(p.alpha, p.cl; order=order_cl, smoothing=smoothing_cl)
+    cd = _smooth1D(p.alpha, p.cd; order=order_cd, smoothing=smoothing_cd)
+    cm = _smooth1D(p.alpha, p.cm; order=order_cm, smoothing=smoothing_cm)
 
     return Polar(copy(p.Re), copy(p.alpha), cl, cd, cm, copy(p.M), copy(p.n_crit), (copy(p.xtrip[1]), copy(p.xtrip[2])), p.name_airfoil)
 end
 
+"""
+    blend(p1::Polar, p2::Polar, weight2::Float64)
+
+Blends two polars using a weight.
+
+# Arguments
+- `p1::Polar`: first polar
+- `p2::Polar`: second polar
+- `weight2::Float64`: weight for the second polar
+"""
 function blend(p1::Polar, p2::Polar, weight2::Float64)
     alpha = union(p1.alpha, p2.alpha)
 
@@ -185,7 +214,8 @@ end
     correction3D(
         polar::Polar, 
         r::Float64, c::Float64, u_inf::Float64, Ω::Float64; 
-        alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0)
+        alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
+    )
 
 Applies 3-D corrections for rotating sections from the 2-D data using the Du and Selig model.
 
@@ -204,14 +234,12 @@ Applies 3-D corrections for rotating sections from the 2-D data using the Du and
 - `polar::Polar`: A new Polar object corrected for 3-D effects
 
 # References
-1. Z. Du and M. Selig, ‘A 3-D stall-delay model for horizontal axis wind turbine 
-performance prediction’, in 1998 ASME Wind Energy Symposium, Reno,NV,U.S.A.: American Institute of Aeronautics and Astronautics, Jan. 1998. doi: 10.2514/6.1998-21.
-
+1. Z. Du and M. Selig, ‘A 3-D stall-delay model for horizontal axis wind turbine performance prediction’, in 1998 ASME Wind Energy Symposium, Reno, NV, U.S.A.: American Institute of Aeronautics and Astronautics, Jan. 1998. doi: 10.2514/6.1998-21.
 """
 function correction3D(
     polar::Polar, r::Float64, c::Float64, u_inf::Float64, Ω::Float64;
     alpha_max_corr::Float64=30.0, alpha_linear_min::Float64=-5.0, alpha_linear_max::Float64=5.0
-)::Polar
+)
 
     cl_3d, cd_3d = _correction3D(
         polar.alpha, polar.cl, polar.cd,
@@ -317,7 +345,16 @@ end
 
 
 """
+    extrapolate(p::Polar; cd_max::Union{Nothing,Float64}=nothing, AR::Union{Nothing,Float64}=nothing, cd_min=0.001, n_alpha::Int=15)
+
 Extrapolate a polar to +/- 180 degrees. This function is based on the Viterna method.
+
+# Arguments 
+- `p::Polar`: polar to extrapolate
+- `cd_max::Union{Nothing,Float64}`: maximum drag coefficient
+- `AR::Union{Nothing,Float64}`: aspect ratio
+- `cd_min::Float64`: minimum drag coefficient
+- `n_alpha::Int`: number of points to use for extrapolation
 """
 function extrapolate(p::Polar; cd_max::Union{Nothing,Float64}=nothing, AR::Union{Nothing,Float64}=nothing, cd_min=0.001, n_alpha::Int=15)
     if cd_min < 0
@@ -439,6 +476,15 @@ function extrapolate(p::Polar; cd_max::Union{Nothing,Float64}=nothing, AR::Union
     return Polar(p.Re, rad2deg.(alpha), cl, cd, cm, p.M, p.n_crit, p.xtrip, p.name_airfoil)
 end
 
+"""
+    generate_name(p::Polar; fname_extra="")
+
+Generates a name for a polar based on its properties.
+
+# Arguments
+- `p::Polar`: polar to generate name for
+- `fname_extra::String`: extra string to append to the name
+"""
 function generate_name(p::Polar; fname_extra="")
     if (p.alpha[1] == -180 && p.alpha[end] == 180) | (p.alpha[1] == -π && p.alpha[end] == π)
         str_extra = "_360"
@@ -457,43 +503,11 @@ function generate_name(p::Polar; fname_extra="")
     return f"{name_af}_Re{p.Re/1e6:0.3f}_M{p.M:0.2f}_N{p.n_crit:0.1f}{str_extra}{fname_extra}"
 end
 
+"""
+    plot(polars::Vector{Polar}; fname=nothing, dpi=300, legend=true)
 
-
-
-# function plot(polars::Vector{Polar}; dpi=300, fname=nothing)
-#     pplt = pyimport("proplot")
-
-#     names = generate_name.(polars)
-
-#     fig, ax = pplt.subplots(figsize=(9, 3), sharex=true, sharey=false, ncols=3, nrows=1)
-#     i = 1
-#     for p in polars
-#         ax[1].plot(p.alpha, p.cl, ".-", label=names[i], lw=0.8, ms=1.6)
-#         ax[2].plot(p.alpha, p.cd, ".-", label=names[i], lw=0.8, ms=1.6)
-#         ax[3].plot(p.alpha, p.cm, ".-", label=names[i], lw=0.8, ms=1.6)
-#         i += 1
-#     end
-#     ax[1].legend(ncols=1)
-
-#     ax[1].set(
-#         ylabel=L"$c_l$",
-#     )
-#     ax[2].set(
-#         ylabel=L"$c_d$",
-#         xlabel="α [deg]",
-#     )
-#     ax[3].set(
-#         ylabel=L"$c_m$",
-#     )
-
-#     if fname !== nothing
-#         savefig(fname, dpi=dpi)
-#     end
-
-#     return fig
-# end
-
-
+Plots a vector of polars.
+"""
 function plot(polars::Vector{Polar}; fname=nothing, dpi=300, legend=true)
     plot_layout = Plots.plot(layout=(3, 1), size=(600, 800), dpi=dpi)
 

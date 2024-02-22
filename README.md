@@ -9,11 +9,11 @@
 
 ### Rotation
 
-<img src="docs/img/rotation.svg" width=500px></img>
+<img src="docs/src/assets/rotation.svg" width=500px></img>
 
 ### Mach 
 
-<img src="docs/img/mach.svg" width=500px></img>
+<img src="docs/src/assets/mach.svg" width=500px></img>
 
 
 ## References
