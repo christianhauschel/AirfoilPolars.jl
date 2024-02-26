@@ -18,9 +18,9 @@
 
 ## Acknowledgments
 
-Authors of AirfoilPreppy [1] and CCBlade.jl [2]
+Julia port of some functions of [AirfoilPreppy](https://github.com/WISDEM/AirfoilPreppy) (Apache 2.0) from NREL.
 
-## References
 
-1. <https://github.com/WISDEM/AirfoilPreppy>
-2. <https://github.com/byuflowlab/CCBlade.jl>
+## License
+
+This code is licensed under Apache 2.0.
